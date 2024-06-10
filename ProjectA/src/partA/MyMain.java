@@ -1,13 +1,11 @@
-/**
- * 
- */
 package partA;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
 
 public class MyMain {
@@ -24,6 +22,7 @@ public class MyMain {
     public static void main(String[] args) throws IOException {
         String SourceName = "TenCardG.jpg";
         String TemplateName = "Template.jpg";
+        String ResultName = "ResultImage.jpg";  // New file name for the result image
 
         File inp = new File(SourceName);
         image = ImageIO.read(inp);
@@ -62,14 +61,26 @@ public class MyMain {
         int ratio = 10;
         double Threshold = ratio * Minimum;
 
-        // Find coordinates with value less than or equal to threshold
+        // Create a copy of the source image to draw rectangles on
+        BufferedImage resultImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2D = resultImage.createGraphics();
+        g2D.drawImage(image, 0, 0, null);
+        g2D.setColor(Color.RED);
+
+        // Draw rectangles on the source image at coordinates with value less than or equal to the threshold
         for (int i = 0; i < absDiffMat.length; i++) {
             for (int j = 0; j < absDiffMat[0].length; j++) {
                 if (absDiffMat[i][j] <= Threshold) {
                     System.out.println("Coordinate: (" + i + ", " + j + ")");
+                    // Draw rectangle at each found coordinate
+                    g2D.drawRect(j, i, widthtemplate, heighttemplate);
                 }
             }
         }
+
+        g2D.dispose();
+        ImageIO.write(resultImage, "jpg", new File("Modified_" + ResultName)); // Save to a new file
+        System.out.println(">> Completed! Check the rectangles on the generated Modified_" + ResultName + " image under this project folder.");
 
         // Print the template image in gray scale
         for (int i = 0; i < heighttemplate; i++) {
@@ -85,11 +96,11 @@ public class MyMain {
             byte[] pixels;
 
             File inp = new File(fileName);
-            image = ImageIO.read(inp);
-            width = image.getWidth();
-            height = image.getHeight();
+            BufferedImage img = ImageIO.read(inp);
+            width = img.getWidth();
+            height = img.getHeight();
 
-            pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+            pixels = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
             System.out.println("Dimension of the Template image: W x H = " + width + " x " + height + " | Number of Pixels: " + pixels.length);
 
             int pr, pg, pb;
@@ -108,5 +119,42 @@ public class MyMain {
             e.printStackTrace();
         }
         return grayImage;
+    }
+
+    /**
+     * 
+     * @param fileName
+     * @param xCoord
+     * @param yCoord
+     * @param rectWidth
+     * @param rectHeight
+     */
+    public static void writeColourImage(String fileName, short xCoord, short yCoord, short rectWidth, short rectHeight) {   
+        try {                   
+            BufferedImage img = add_Rectangle(image, xCoord, yCoord, rectWidth, rectHeight);
+            ImageIO.write(img, "jpg", new File("Modified_" + fileName)); // Save to a new file
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 
+     * @param img
+     * @param xCoord
+     * @param yCoord
+     * @param rectWidth
+     * @param rectHeight
+     * @return
+     */
+    public static BufferedImage add_Rectangle(BufferedImage img, short xCoord, short yCoord, short rectWidth, short rectHeight) {
+        // Create a copy of the original image to draw on
+        BufferedImage bi = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2D = bi.createGraphics();
+        g2D.drawImage(img, 0, 0, null);
+        g2D.setColor(Color.RED);
+        g2D.drawRect(xCoord, yCoord, rectWidth, rectHeight);
+        g2D.dispose();
+        return bi;
     }
 }
